@@ -50,3 +50,4 @@ id_ed25519*
 
 # Spark
 spark-operator-*.tgz
+kubectl
