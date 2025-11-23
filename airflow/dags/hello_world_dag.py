@@ -1,67 +1,28 @@
 from airflow import DAG
-from airflow.operators.bash import BashOperator
 from airflow.operators.python import PythonOperator
-from datetime import datetime
-from airflow.decorators import dag, task
-from kubernetes.client import models as k8s
+from datetime import datetime, timedelta
 
+default_args = {
+    'owner': 'financial-platform',
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
+}
 
-default_executor_config = {
-    "pod_override": k8s.V1Pod(
-        spec=k8s.V1PodSpec(
-            containers=[
-                k8s.V1Container(
-                    name="base",
-                    resources=k8s.V1ResourceRequirements(
-                        requests={"cpu": "100m", "memory": "128Mi"},
-                        limits={"cpu": "200m", "memory": "256Mi"}
-                    )
-                )
-            ]
-        )
+def hello_world():
+    print("Hello from Financial Platform!")
+    return "Success"
+
+with DAG(
+    'example_financial_platform',
+    default_args=default_args,
+    description='DAG de exemplo',
+    schedule_interval='@daily',
+    start_date=datetime(2025, 11, 23),
+    catchup=False,
+    tags=['example'],
+) as dag:
+    
+    PythonOperator(
+        task_id='say_hello',
+        python_callable=hello_world,
     )
-} # end of default_executor_config
-
-with DAG(dag_id="hello_world_dag",
-         start_date=datetime(2024,3,27),
-         schedule="@hourly",
-         catchup=False) as dag:
-
-    @task(
-        task_id="hello_world",
-        executor_config=default_executor_config
-    )
-    def hello_world():
-        print('Hello World - From Github Repository')
-
-
-
-    @task.bash(
-        task_id="sleep",
-    )
-    def sleep_task() -> str:
-        return "sleep 10"
-
-
-    @task(
-        task_id="done",
-        #executor_config=default_executor_config
-    )
-    def done():
-        print('Done')
-
-
-    @task(
-        task_id="goodbye_world",
-    )
-    def goodbye_world():
-        print('Goodbye World - From Github Repository')
-
-
-    hello_world_task = hello_world()
-    sleep_task = sleep_task()
-    goodbye_world_task = goodbye_world()
-    done_task = done()
-
-
-    hello_world_task >> sleep_task >> goodbye_world_task >> done_task
