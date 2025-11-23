@@ -1,0 +1,4 @@
+# Dependências extras para os DAGs
+apache-airflow-providers-http
+apache-airflow-providers-postgres
+apache-airflow-providers-amazon

@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+
+# IDEs
+.vscode/
+.idea/
+
+# Airflow
+airflow/logs/
+airflow/*.db
+airflow/*.pid
+
+# Environment
+.env
+*.log
+
+# OS
+.DS_Store
+
+# Kubernetes/Helm secrets e configurações locais
+*-secret.yaml
+*-secret.yml
+*-credentials-secret.yaml
+airflow-git-ssh-key-secret.yaml
+airflow-postgresql-credentials-secret.yaml
+custom-values.yaml
+values-*.yaml
+
+# Kubectl configs
+kubectl/
+*.kubeconfig
+
+# Helm
+charts/
+*.tgz
+
+# SSH keys
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+*.pub
+
+# Spark
+spark-operator-*.tgz
