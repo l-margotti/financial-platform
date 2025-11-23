@@ -3,9 +3,7 @@ from airflow.operators.python import PythonOperator
 from datetime import datetime, timedelta
 
 default_args = {
-    'owner': 'financial-platform',
-    'retries': 1,
-    'retry_delay': timedelta(minutes=5),
+    'owner': 'financial-platform'
 }
 
 def hello_world():
@@ -16,7 +14,7 @@ with DAG(
     'example_financial_platform',
     default_args=default_args,
     description='DAG de exemplo',
-    schedule_interval='@daily',
+    schedule='@daily',
     start_date=datetime(2025, 11, 23),
     catchup=False,
     tags=['example'],
