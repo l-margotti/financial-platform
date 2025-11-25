@@ -1,41 +1,37 @@
 from datetime import timedelta, datetime
-from airflow.operators.python import PythonOperator
 from airflow import DAG
+from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
+from airflow.operators.python import PythonOperator
 
-
-default_args = {
-    'owner': 'airflow',
-    'depends_on_past': False,
-    'start_date': datetime.now() - timedelta(days=1),
-    'email': ['airflow@example.com'],
-    'email_on_failure': False,
-    'email_on_retry': False,
-    'max_active_runs': 1,
-    'retries': 0,
-}
-def startBatch():
-    print('##### startBatch #####')
-def done():
-    print('##### done #####')
 with DAG(
     dag_id='spark_pi',
-    start_date=datetime.now() - timedelta(days=1),
-    default_args=default_args,
+    start_date=datetime(2025, 11, 24),
     schedule=None,
-    tags=['example']
+    catchup=False,
+    tags=['spark', 'example']
 ) as dag:
-    spark_pi_task = SparkKubernetesOperator(
-        task_id='spark_example',
+    
+    def start_batch():
+        print('##### startBatch #####')
+    
+    def done():
+        print('##### done #####')
+    
+    start_task = PythonOperator(
+        task_id='startBatch',
+        python_callable=start_batch
+    )
+    
+    spark_task = SparkKubernetesOperator(
+        task_id='spark_pi_task',
         namespace='airflow',
         application_file='spark-apps/spark-pi.yaml',
         kubernetes_conn_id='kubernetes_default',
     )
-    start_batch_task = PythonOperator(
-        task_id='startBatch',
-        python_callable=startBatch
-    )
+    
     done_task = PythonOperator(
         task_id='done',
         python_callable=done
     )
-    start_batch_task >> spark_pi_task >> done_task
+    
+    start_task >> spark_task >> done_task
