@@ -1,0 +1,82 @@
+# Variáveis de ambiente
+env:
+  - name: AWS_ACCESS_KEY_ID
+    value: "minioadmin"
+  - name: AWS_SECRET_ACCESS_KEY
+    value: "minioadmin123"
+  - name: AIRFLOW__LOGGING__REMOTE_LOGGING
+    value: "True"
+  - name: AIRFLOW__LOGGING__REMOTE_BASE_LOG_FOLDER
+    value: "s3://airflow-logs"
+  - name: AIRFLOW__LOGGING__REMOTE_LOG_CONN_ID
+    value: "minio_s3"
+  # Conexão MinIO via variável de ambiente (Airflow 3.0)
+  - name: AIRFLOW_CONN_MINIO_S3
+    value: "aws://minioadmin:minioadmin123@?endpoint_url=http://minio.minio.svc.cluster.local:9000"
+
+# Configuração do banco de dados
+data:
+  metadataConnection:
+    user: postgres
+    pass: postgres123
+    protocol: postgresql
+    host: ~
+    port: 5432
+    db: postgres
+    sslmode: disable
+
+# Executor Kubernetes
+executor: "KubernetesExecutor"
+
+dags:
+  gitSync:
+    enabled: true
+    repo: "git@github.com:l-margotti/financial-platform.git"
+    branch: "main"
+    rev: HEAD
+    depth: 1
+    wait: 60
+    subPath: "airflow/dags"
+    sshKeySecret: "airflow-git-ssh-key-secret"
+    
+    knownHosts: |
+      github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl
+      github.com ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEmKSENjQEezOmxkZMy7opKgwFB9nkt5YRrYMjNuG5N87uRgg6CLrbo5wAdT/y6v0mKV0U2w0WZ2YB/++Tpockg=
+      github.com ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCj7ndNxQowgcQnjshcLrqPEiiphnt+VTTvDP6mHBL9j1aNUkY4Ue1gvwnGLVlOhGeYrnZaMgRK6+PKCUXaDbC7qtbW8gIkhL7aGCsOr/C56SJMy/BCZfxd1nWzAOxSDPgVsmerOBYfNqltV9/hWCqBywINIR+5dIg6JTJ72pcEpEjcYgXkE2YEFXV1JHnsKgbLWNlhScqb2UmyRkQyytRLtL+38TGxkxCflmO+5Z8CSSNY7GidjMIZ7Q4zMjA2n1nGrlTDkzwDCsw+wqFPGQA179cnfGWOWRVruj16z6XyvxvjJwbz0wQZ75XK5tKSb7FNyeIEs4TT4jk+S4dhPeAUC5y+bDYirYgM4GC7uEnztnZyaVWQ7B381AK4Qdrwt51ZqExKbQpTUNn+EjqoTwvqNj4kqx5QUCI0ThS/YkOxJCXmPUWZbhjpCg56i+2aB6CmK2JGhn57K5mj0MNdBXA4/WnwH6XoPWJzK5Nyu2zB3nAZp+S5hpQs+p1vN1/wsjk=
+
+extraPipPackages:
+  - "apache-airflow-providers-cncf-kubernetes>=8.0.0"
+  - "apache-airflow-providers-http"
+  - "apache-airflow-providers-postgres"
+  - "apache-airflow-providers-amazon"
+  - "boto3>=1.34.0"
+  - "s3fs>=2023.12.0"
+
+redis:
+  enabled: false 
+
+postgresql:
+  enabled: true
+  image:
+    repository: bitnamilegacy/postgresql
+    tag: 16.1.0-debian-11-r15
+  
+  auth:
+    enablePostgresUser: true
+    username: "airflowuser"
+    password: "airflow123"
+    postgresPassword: "postgres123"
+
+  persistence:
+    enabled: true
+    size: 10Gi
+
+triggerer:
+  replicas: 2
+  persistence:
+    size: 5Gi
+
+logs:
+  persistence:
+    enabled: true
+    size: 10Gi

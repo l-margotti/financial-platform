@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: spark-base-config
+  namespace: airflow
+data:
+  # Configurações Hadoop/S3
+  spark.hadoop.fs.s3a.endpoint: "http://minio.minio.svc.cluster.local:9000"
+  spark.hadoop.fs.s3a.access.key: "minioadmin"
+  spark.hadoop.fs.s3a.secret.key: "minioadmin123"
+  spark.hadoop.fs.s3a.path.style.access: "true"
+  spark.hadoop.fs.s3a.impl: "org.apache.hadoop.fs.s3a.S3AFileSystem"
+  spark.hadoop.fs.s3a.connection.ssl.enabled: "false"
+  spark.hadoop.fs.s3a.aws.credentials.provider: "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider"
+  
+  # Configurações gerais Spark
+  spark.executor.cores: "1"
+  spark.executor.memory: "1g"
+  spark.driver.memory: "1g"
