@@ -9,7 +9,7 @@ spec:
   mode: cluster
   image: "apache/spark-py:v3.5.0"
   imagePullPolicy: IfNotPresent
-  mainApplicationFile: "local:///opt/spark-work-dir/spark-scripts/collect_binance_data.py"
+  mainApplicationFile: "local:///opt/spark-work-dir/financial-platform/spark-scripts/collect_binance_data.py"
   arguments:
     - "s3a://bronze/crypto/binance"
   sparkVersion: "3.5.0"
@@ -30,17 +30,13 @@ spec:
   driver:
     cores: 1
     coreLimit: "1200m"
-    memory: "512m"
+    memory: "1g"
     labels:
       version: "3.5.0"
       layer: "bronze"
       source: "binance"
     serviceAccount: spark-operator-spark
-    envFrom:
-      - secretRef:
-          name: spark-minio-credentials
     
-    # Git-sync como initContainer
     initContainers:
       - name: git-sync
         image: registry.k8s.io/git-sync/git-sync:v4.3.0
@@ -48,28 +44,24 @@ spec:
           - --repo=https://github.com/l-margotti/financial-platform.git
           - --branch=main
           - --depth=1
-          - --root=/tmp/git
+          - --root=/work-dir
           - --one-time
         volumeMounts:
-          - name: git-repo
-            mountPath: /tmp/git
+          - name: work-dir
+            mountPath: /work-dir
     
     volumeMounts:
-      - name: git-repo
+      - name: work-dir
         mountPath: /opt/spark-work-dir
   
   executor:
     cores: 1
     instances: 1
-    memory: "512m"
+    memory: "1g"
     labels:
       version: "3.5.0"
       layer: "bronze"
-    envFrom:
-      - secretRef:
-          name: spark-minio-credentials
     
-    # Git-sync como initContainer nos executors também
     initContainers:
       - name: git-sync
         image: registry.k8s.io/git-sync/git-sync:v4.3.0
@@ -77,16 +69,16 @@ spec:
           - --repo=https://github.com/l-margotti/financial-platform.git
           - --branch=main
           - --depth=1
-          - --root=/tmp/git
+          - --root=/work-dir
           - --one-time
         volumeMounts:
-          - name: git-repo
-            mountPath: /tmp/git
+          - name: work-dir
+            mountPath: /work-dir
     
     volumeMounts:
-      - name: git-repo
+      - name: work-dir
         mountPath: /opt/spark-work-dir
   
   volumes:
-    - name: git-repo
+    - name: work-dir
       emptyDir: {}
