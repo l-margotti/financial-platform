@@ -8,8 +8,8 @@ spec:
   pythonVersion: "3"
   mode: cluster
   image: "apache/spark-py:v3.5.0"
-  imagePullPolicy: Always
-  mainApplicationFile: "local:///opt/spark/git-repo/spark-scripts/collect_binance_data.py"
+  imagePullPolicy: IfNotPresent
+  mainApplicationFile: "local:///opt/spark-work-dir/spark-scripts/collect_binance_data.py"
   arguments:
     - "s3a://bronze/crypto/binance"
   sparkVersion: "3.5.0"
@@ -39,9 +39,24 @@ spec:
     envFrom:
       - secretRef:
           name: spark-minio-credentials
+    
+    # Git-sync como initContainer
+    initContainers:
+      - name: git-sync
+        image: registry.k8s.io/git-sync/git-sync:v4.3.0
+        args:
+          - --repo=https://github.com/l-margotti/financial-platform.git
+          - --branch=main
+          - --depth=1
+          - --root=/tmp/git
+          - --one-time
+        volumeMounts:
+          - name: git-repo
+            mountPath: /tmp/git
+    
     volumeMounts:
       - name: git-repo
-        mountPath: /opt/spark/git-repo
+        mountPath: /opt/spark-work-dir
   
   executor:
     cores: 1
@@ -53,12 +68,25 @@ spec:
     envFrom:
       - secretRef:
           name: spark-minio-credentials
+    
+    # Git-sync como initContainer nos executors também
+    initContainers:
+      - name: git-sync
+        image: registry.k8s.io/git-sync/git-sync:v4.3.0
+        args:
+          - --repo=https://github.com/l-margotti/financial-platform.git
+          - --branch=main
+          - --depth=1
+          - --root=/tmp/git
+          - --one-time
+        volumeMounts:
+          - name: git-repo
+            mountPath: /tmp/git
+    
     volumeMounts:
       - name: git-repo
-        mountPath: /opt/spark/git-repo
+        mountPath: /opt/spark-work-dir
   
   volumes:
     - name: git-repo
-      gitRepo:
-        repository: "https://github.com/l-margotti/financial-platform.git"
-        revision: "main"
+      emptyDir: {}
