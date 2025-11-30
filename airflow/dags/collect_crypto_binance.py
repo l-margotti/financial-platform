@@ -3,10 +3,8 @@
 from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
 from datetime import datetime, timedelta
-import sys
-import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'plugins'))
+# Import do helper (agora está em dags/utils/)
 from utils.spark_helper import SparkJobBuilder
 
 
