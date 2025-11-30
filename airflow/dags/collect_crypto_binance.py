@@ -4,9 +4,6 @@ from airflow import DAG
 from airflow.providers.cncf.kubernetes.operators.spark_kubernetes import SparkKubernetesOperator
 from datetime import datetime, timedelta
 
-# Import do helper (agora está em dags/utils/)
-from utils.spark_helper import SparkJobBuilder
-
 
 with DAG(
     'collect_crypto_binance',
@@ -21,10 +18,6 @@ with DAG(
     collect_data = SparkKubernetesOperator(
         task_id='collect_binance_data',
         namespace='airflow',
-        body=SparkJobBuilder('binance-{{ ts_nodash }}', 'collect_binance_data.py')
-            .with_arguments(['s3a://bronze/crypto/binance'])
-            .with_resources(driver_memory="512m", executor_instances=1, executor_memory="512m")
-            .with_labels({'layer': 'bronze', 'source': 'binance'})
-            .build(),
+        application_file='spark-apps/binance-collector.yaml',
         kubernetes_conn_id='kubernetes_default',
     )

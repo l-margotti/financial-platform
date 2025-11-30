@@ -1,0 +1,64 @@
+apiVersion: sparkoperator.k8s.io/v1beta2
+kind: SparkApplication
+metadata:
+  name: binance-collector
+  namespace: airflow
+spec:
+  type: Python
+  pythonVersion: "3"
+  mode: cluster
+  image: "apache/spark-py:v3.5.0"
+  imagePullPolicy: Always
+  mainApplicationFile: "local:///opt/spark/git-repo/spark-scripts/collect_binance_data.py"
+  arguments:
+    - "s3a://bronze/crypto/binance"
+  sparkVersion: "3.5.0"
+  restartPolicy:
+    type: Never
+  
+  hadoopConf:
+    fs.s3a.endpoint: "http://minio.minio.svc.cluster.local:9000"
+    fs.s3a.access.key: "minioadmin"
+    fs.s3a.secret.key: "minioadmin123"
+    fs.s3a.path.style.access: "true"
+    fs.s3a.impl: "org.apache.hadoop.fs.s3a.S3AFileSystem"
+    fs.s3a.connection.ssl.enabled: "false"
+  
+  sparkConf:
+    spark.hadoop.fs.s3a.aws.credentials.provider: "org.apache.hadoop.fs.s3a.SimpleAWSCredentialsProvider"
+  
+  driver:
+    cores: 1
+    coreLimit: "1200m"
+    memory: "512m"
+    labels:
+      version: "3.5.0"
+      layer: "bronze"
+      source: "binance"
+    serviceAccount: spark-operator-spark
+    envFrom:
+      - secretRef:
+          name: spark-minio-credentials
+    volumeMounts:
+      - name: git-repo
+        mountPath: /opt/spark/git-repo
+  
+  executor:
+    cores: 1
+    instances: 1
+    memory: "512m"
+    labels:
+      version: "3.5.0"
+      layer: "bronze"
+    envFrom:
+      - secretRef:
+          name: spark-minio-credentials
+    volumeMounts:
+      - name: git-repo
+        mountPath: /opt/spark/git-repo
+  
+  volumes:
+    - name: git-repo
+      gitRepo:
+        repository: "https://github.com/l-margotti/financial-platform.git"
+        revision: "main"
