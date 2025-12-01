@@ -9,7 +9,7 @@ spec:
   mode: cluster
   image: docker.io/library/spark:4.0.0
   imagePullPolicy: IfNotPresent
-  mainApplicationFile: "local:///opt/spark-work-dir/financial-platform/spark-scripts/collect_binance_data.py"
+  mainApplicationFile: "local:///opt/spark-work-dir/spark-scripts/collect_binance_data.py"
   arguments:
     - "s3a://bronze/crypto/binance"
   sparkVersion: 4.0.0
